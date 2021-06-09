@@ -19,12 +19,12 @@
 
   (let (vars)
     (progn
-      (if (member 'st body) (push '(st :start) vars))
-      (if (member 'en body) (push '(en :end) vars))
-      (if (member 'pj body) (push '(pj :project) vars))
+      (if (member 's body) (push '(s :start) vars))
+      (if (member 'e body) (push '(e :end) vars))
+      (if (member 'p body) (push '(p :project) vars))
       (if (member 'tg body) (push '(tg :tags) vars))
-      (if (member 'tt body) (push '(tt :title) vars))
-      (if (member 'rn body) (push '(pj :running) vars)))
+      (if (member 'tl body) (push '(tl :title) vars))
+      (if (member 'r body) (push '(r :running) vars)))
     `(let 
        ,vars
        (make-entry ,@body))))
