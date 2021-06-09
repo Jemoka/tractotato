@@ -8,13 +8,26 @@
   (tags nil)
   (title "")
   (running t))
-(export '(entry 
-          entry-end
+(export '(entry-end
           entry-project
           entry-tags
           entry-title
-          entry-running
-          make-entry))
+          entry-running))
+
+(defmacro entry (&body body)
+  "Track time"
+
+  (let (vars)
+    (progn
+      (if (member 'st body) (push '(st :start) vars))
+      (if (member 'en body) (push '(en :end) vars))
+      (if (member 'pj body) (push '(pj :project) vars))
+      (if (member 'tg body) (push '(tg :tags) vars))
+      (if (member 'tt body) (push '(tt :title) vars))
+      (if (member 'rn body) (push '(pj :running) vars)))
+    `(let 
+       ,vars
+       (make-entry ,@body))))
 
 (defun continue-entry (entry)
   "Destructively continue the time entry"
