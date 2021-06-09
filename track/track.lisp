@@ -1,8 +1,8 @@
 (in-package :tractotato)
 
-'((make-entry :project "one" :title "1")
-  (make-entry :project "one" :title "2")
-  (make-entry :project "tree" :title "e"))
+(list (entry p "one" tl "1")
+      (entry p "one" tl "2")
+      (entry p "tree" tl "e")) 
 
 
 
