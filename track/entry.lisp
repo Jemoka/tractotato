@@ -8,13 +8,13 @@
   (tags nil)
   (title "")
   (running t))
-
 (export '(entry 
           entry-end
           entry-project
           entry-tags
           entry-title
-          entry-running))
+          entry-running
+          make-entry))
 
 (defun continue-entry (entry)
   "Destructively continue the time entry"
