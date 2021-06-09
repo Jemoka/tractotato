@@ -1,8 +1,13 @@
 (in-package :tractotato)
 
-(list (entry p "one" tl "1")
-      (entry p "one" tl "2")
-      (entry p "tree" tl "e")) 
+(track "one"
+  (project "project")
+  (start 0)) 
+
+;(tags 
+  ;'(("eat")
+    ;("some")
+    ;("chicken")))
 
 
 
