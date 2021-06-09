@@ -25,20 +25,18 @@
 
 (defmacro transform-tags (tags)
   "Transform tag entries"
-
-  (mapcar (lambda (n)
-            (if (atom n) 
-                `(make-tag :title ,n) 
-                `(make-tag ,@n))) tags))
+  `(list ,@(mapcar (lambda (n)
+                     (if (atom n) 
+                         `(make-tag :title ,n) 
+                         `(make-tag ,@n))) tags)))
 
 (defmacro track (title &body body)
   "Track time"
-
   (let ((entries 
           (mapcan (lambda (n) 
                     (cond
                       ((eq (car n) 'project) `(:project (make-project :title ,(cadr n))))
-                      ((eq (car n) 'tags) `(:tags `(,(transform-tags (cadr n)))))
+                      ((eq (car n) 'tags) `(:tags (transform-tags ,(cadr n))))
                       (t `(,(intern (symbol-name (car n)) "KEYWORD") ,(cadr n))))
                     ) body)))
     `(make-entry 
