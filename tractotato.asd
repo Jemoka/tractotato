@@ -1,0 +1,16 @@
+; vi:syntax=lisp
+
+(defsystem "tractotato"
+  :description "A potato that tracks"
+  :version "0.1"
+  :author "Houjun Liu"
+  :licence "MIT License"
+  :depends-on ( )
+  :components ((:file "package")
+               (:module track
+                    :components 
+                    ((:file "entry")
+                     (:file "track")))
+                (:module analyze
+                    :components ((:file "analyze")))))
+
