@@ -6,7 +6,8 @@
 
 (defstruct tag
   "A tag"
-  (title ""))
+  (title "")
+  (weight 1))
 
 (defstruct entry
   "A time tracking entry"
@@ -22,6 +23,14 @@
           entry-title
           entry-running))
 
+(defmacro transform-tags (tags)
+  "Transform tag entries"
+
+  (mapcar (lambda (n)
+            (if (atom n) 
+                `(make-tag :title ,n) 
+                `(make-tag ,@n))) tags))
+
 (defmacro track (title &body body)
   "Track time"
 
@@ -29,22 +38,12 @@
           (mapcan (lambda (n) 
                     (cond
                       ((eq (car n) 'project) `(:project (make-project :title ,(cadr n))))
+                      ((eq (car n) 'tags) `(:tags `(,(transform-tags (cadr n)))))
                       (t `(,(intern (symbol-name (car n)) "KEYWORD") ,(cadr n))))
                     ) body)))
     `(make-entry 
        :title ,title
        ,@entries)))
-  ;(let (vars)
-    ;(progn
-      ;(if (member 's body) (push '(s :start) vars))
-      ;(if (member 'e body) (push '(e :end) vars))
-      ;(if (member 'p body) (push '(p :project) vars))
-      ;(if (member 'tg body) (push '(tg :tags) vars))
-      ;(if (member 'tl body) (push '(tl :title) vars))
-      ;(if (member 'r body) (push '(r :running) vars)))
-    ;`(let 
-       ;,vars
-       ;(make-entry ,@body))))
 
 (defun continue-entry (entry)
   "Destructively continue the time entry"

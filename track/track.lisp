@@ -1,13 +1,12 @@
 (in-package :tractotato)
 
-(track "one"
-  (project "project")
-  (start 0)) 
+(macroexpand '(track "one"
+                (project "project")
+                (start 0)
+                (tags ("eat"
+                       "some"
+                       "chicken")))) 
 
-;(tags 
-  ;'(("eat")
-    ;("some")
-    ;("chicken")))
 
 
 
