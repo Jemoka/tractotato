@@ -42,6 +42,7 @@
     `(make-entry 
        :title ,title
        ,@entries)))
+(export 'track)
 
 (defun continue-entry (entry)
   "Destructively continue the time entry"
