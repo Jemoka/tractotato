@@ -10,6 +10,7 @@
                (:module track
                     :components 
                     ((:file "entry")
+                     (:file "indexing")
                      (:file "track")))
                 (:module analyze
                     :components ((:file "analyze")))))
