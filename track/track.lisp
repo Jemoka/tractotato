@@ -6,24 +6,39 @@
   (intern (apply #'concatenate 'string 
                  (mapcar #'symbol-name symbols))))
 
-(defmacro index (body)
-  (cond
-    ((eq (cadr body) 'project) `(lambda (n) (,(car body) (project-title (entry-project n)) ,(caddr body))))
-    (t `(lambda (n) 
-          (,(car body) (,(symbol-append 'entry- (cadr body)) n) ,(caddr body))))))
+(defmacro index (body &key (collect-rule 'or))
+  (let ((n (gensym)) (k (gensym)))
+    (cond
+    ((eq (cadr body) 'project) 
+         `(lambda (,n) (funcall ,(car body) (project-title (entry-project ,n)))))
+    ((eq (cadr body) 'tags)
+         `(lambda (,n) (macroexpand (cons (quote ,collect-rule) (mapcar (lambda (,k) 
+                                       (funcall ,(car body) (tag-title ,k) (tag-weight ,k))) (entry-tags ,n))))))
+    (t `(lambda (,n) 
+          (,(car body) ,(cadr body) (,(symbol-append 'entry- (caddr body)) ,n))))))) 
+(export 'index)
 
-(index (search project "chicken"))
+;(defun filter-entries ())
+;(index ((lambda (name weight) (search name "chicken")) tags))
+;(index (search start "chicken"))
 
 
-(list (track "A good time entry"
-        (project "Eating")
-        (tags ("aftercare"
-               "transition"))) 
+;(macroexpand '(index (search title "good"))) 
 
-      (track "Another time entry"
-        (project "Swimming")
-        (tags ("one"
-               "two")))) 
+;(funcall (index (search "good" title)) (track "A good time entry"
+                                         ;(project "Eating")
+                                         ;(tags ("aftercare"
+                                                ;"transition")))) 
+
+(remove-if-not (index (< 12 start)) (list (track "A good time entry"
+                                                     (project "Eating")
+                                                     (tags ("aftercare"
+                                                            "transition"))) 
+
+                                                   (track "Another time entry"
+                                                     (project "Swimming")
+                                                     (tags ("one"
+                                                            "two")))))  
 
 
 
