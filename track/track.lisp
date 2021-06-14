@@ -6,39 +6,29 @@
   (intern (apply #'concatenate 'string 
                  (mapcar #'symbol-name symbols))))
 
-(defmacro index (body &key (collect-rule 'or))
+(defmacro entry-index (body var &key (collect-rule 'or))
   (let ((n (gensym)) (k (gensym)))
     (cond
-    ((eq (cadr body) 'project) 
-         `(lambda (,n) (funcall ,(car body) (project-title (entry-project ,n)))))
-    ((eq (cadr body) 'tags)
-         `(lambda (,n) (macroexpand (cons (quote ,collect-rule) (mapcar (lambda (,k) 
-                                       (funcall ,(car body) (tag-title ,k) (tag-weight ,k))) (entry-tags ,n))))))
-    (t `(lambda (,n) 
-          (,(car body) ,(cadr body) (,(symbol-append 'entry- (caddr body)) ,n))))))) 
-(export 'index)
+      ((eq var 'project) 
+       `(lambda (,n) (funcall ,body (project-title (entry-project ,n)))))
+      ((eq var 'tags)
+       `(lambda (,n) (eval (macroexpand (cons (quote ,collect-rule) (mapcar (lambda (,k) 
+                                                                              (funcall ,body (tag-title ,k) (tag-weight ,k))) (entry-tags ,n)))))))
+      (t `(lambda (,n) 
+            (,(car body) ,(cadr body) (,(symbol-append 'entry- var) ,n))))))) 
+(export 'entry-index)
 
-;(defun filter-entries ())
-;(index ((lambda (name weight) (search name "chicken")) tags))
-;(index (search start "chicken"))
+;(defparameter time-entries (list (track "A good time entry"
+        ;(project "Eating")
+        ;(tags ("aftercare"
+               ;"transition"))) 
 
+      ;(track "Another time entry"
+        ;(project "Swimming")
+        ;(tags ("one"
+               ;"two"))))) 
 
-;(macroexpand '(index (search title "good"))) 
-
-;(funcall (index (search "good" title)) (track "A good time entry"
-                                         ;(project "Eating")
-                                         ;(tags ("aftercare"
-                                                ;"transition")))) 
-
-(remove-if-not (index (< 12 start)) (list (track "A good time entry"
-                                                     (project "Eating")
-                                                     (tags ("aftercare"
-                                                            "transition"))) 
-
-                                                   (track "Another time entry"
-                                                     (project "Swimming")
-                                                     (tags ("one"
-                                                            "two")))))  
+;(remove-if-not (entry-index (search "good") title) time-entries)
 
 
 
