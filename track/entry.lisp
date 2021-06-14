@@ -3,11 +3,14 @@
 (defstruct project
   "A project"
   (title ""))
+(export '(project-title))
 
 (defstruct tag
   "A tag"
   (title "")
   (weight 1))
+(export '(tag-title
+          tag-weight))
 
 (defstruct entry
   "A time tracking entry"
