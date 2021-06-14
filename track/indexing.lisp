@@ -19,14 +19,14 @@
 (export 'entry-index)
 
 ;(defparameter time-entries (list (track "A good time entry"
-;(project "Eating")
-;(tags ("aftercare"
-;"transition"))) 
+                                        ;(project "Eating")
+                                        ;(tags ("aftercare"
+                                               ;"transition"))) 
 
-;(track "Another time entry"
-;(project "Swimming")
-;(tags ("one"
-;"two"))))) 
+                                 ;(track "Another time entry"
+                                        ;(project "Swimming")
+                                        ;(tags ("one"
+                                               ;"two"))))) 
 
 ;(remove-if-not (entry-index (search "good") title) time-entries)
 
