@@ -79,6 +79,8 @@
 (defmethod (setf weight) (new-value (obj tag))
   (setf (slot-value obj 'weight) new-value))
 
+(export 'weight)
+
 (defmacro transform-tags (&body body)
   "Transform tag entries"
   `(list ,@(mapcar (lambda (n)
@@ -86,13 +88,16 @@
                          `(make-tag :title ,n) 
                          `(make-tag ,@n))) body)))
 
+(export 'transform-tags)
+
 (defmacro parse (title &body body)
   "Parse entry"
   (let ((entries 
           (mapcan (lambda (n) 
                     (cond
-                      ((eq (car n) 'tags) `(:tags ,(macroexpand (cons 'transform-tags (cadr n)))))
-                      ((eq (car n) 'children) `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'parse e))) (cadr n)))))
+                      ((eq (car n) 'tractotato:tags) 
+                       `(:tags ,(macroexpand (cons 'tractotato:transform-tags (cadr n)))))
+                      ((eq (car n) 'tractotato:children) `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'tractotato:parse e))) (cadr n)))))
                       (t `(,(intern (symbol-name (car n)) "KEYWORD") ,(cadr n))))
                     ) body)))
     `(make-entry 
@@ -101,7 +106,7 @@
 
 (defmacro entry (&body body)
   "Overload parse as 'entry'"
-  `(parse ,@body))
+  `(tractotato:parse ,@body))
 
 (export '(parse 
            entry))
@@ -138,13 +143,5 @@
                 )))
           (closer-mop:class-slots (find-class 'entry))))))
 
+(export '(serialize tags children))
 
-(title (eval (cons 'entry (serialize (entry "this"
-                                     (end 12)
-                                     (tags ("tag1" "tag2" (:title "tag3" :weight 2)))
-                                     (children 
-                                       (("child1" (sequential t))
-                                        ("child2" 
-                                         (children
-                                           (("childchild1"))))
-                                        ("child3" (end 192012))))))))) 

@@ -13,5 +13,6 @@
                      (:file "indexing")
                      (:file "track")))
                 (:module analyze
-                    :components ((:file "analyze")))))
+                    :components ((:file "analyze")))
+                (:file "demo")))
 
