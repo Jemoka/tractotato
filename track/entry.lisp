@@ -123,37 +123,28 @@
           (lambda (slot)
             (let ((slot-name (closer-mop:slot-definition-name slot)))
               (cond 
-              ((eq slot-name 'tags) 
-               (list 'tags (let ((tgs (tags obj)))
-                 (mapcar (lambda (tg)
-                           (flatten (mapcar 
-                           (lambda (tsl)
-                             (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
-                               (list (intern (symbol-name tsl-symb) "KEYWORD") (slot-value tg tsl-symb))   
-                               )
-
-
-                             )
-                           (closer-mop:class-slots (find-class 'tag))
-                           )) 
-                           
-                           )
-                         
-                         tgs)
-
-
-                 ))  ))
-              )
-            )
+                ((eq slot-name 'tags) 
+                 (list 'tags (let ((tgs (tags obj)))
+                               (mapcar (lambda (tg)
+                                         (flatten (mapcar 
+                                                    (lambda (tsl)
+                                                      (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
+                                                        (list (intern (symbol-name tsl-symb) "KEYWORD") (slot-value tg tsl-symb))))
+                                                    (closer-mop:class-slots (find-class 'tag))))) 
+                                       tgs))))
+                ((eq slot-name 'children)
+                 (list 'children (mapcar (lambda (ent) (serialize ent)) (children obj))))
+                (t (list slot-name (slot-value obj slot-name)))
+                )))
           (closer-mop:class-slots (find-class 'entry))))))
 
 
-(serialize (entry "this"
-                  (end 12)
-                  (tags ("tag1" "tag2" (:title "tag3" :weight 2)))
-                  (children 
-                    (("child1" (sequential t))
-                     ("child2" 
-                      (children
-                        (("childchild1"))))
-                     ("child3" (end 192012))))))
+(title (eval (cons 'entry (serialize (entry "this"
+                                     (end 12)
+                                     (tags ("tag1" "tag2" (:title "tag3" :weight 2)))
+                                     (children 
+                                       (("child1" (sequential t))
+                                        ("child2" 
+                                         (children
+                                           (("childchild1"))))
+                                        ("child3" (end 192012))))))))) 
