@@ -5,7 +5,7 @@
   :version "0.1"
   :author "Houjun Liu"
   :licence "MIT License"
-  :depends-on ( )
+  :depends-on ( "closer-mop" )
   :components ((:file "package")
                (:module track
                     :components 

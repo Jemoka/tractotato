@@ -86,43 +86,74 @@
                          `(make-tag :title ,n) 
                          `(make-tag ,@n))) body)))
 
-(defmacro track (title &body body)
-  "Track time"
+(defmacro parse (title &body body)
+  "Parse entry"
   (let ((entries 
           (mapcan (lambda (n) 
                     (cond
                       ((eq (car n) 'tags) `(:tags ,(macroexpand (cons 'transform-tags (cadr n)))))
-                      ((eq (car n) 'children) `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'track e))) (cadr n)))))
+                      ((eq (car n) 'children) `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'parse e))) (cadr n)))))
                       (t `(,(intern (symbol-name (car n)) "KEYWORD") ,(cadr n))))
                     ) body)))
     `(make-entry 
        :title ,title
        ,@entries)))
 
+(defmacro entry (&body body)
+  "Overload parse as 'entry'"
+  `(parse ,@body))
 
-(macroexpand '(track "this"
-                (end 12)
-                (tags ("tag1" "tag2"))
-                (children 
-                  (("that" (end 12) (sequential t))
-                   ("that" (end 12))
-                   ("that" (end 12))))))
+(export '(parse 
+           entry))
 
-(export 'track)
+(defun flatten (l)
+  "Flatten!"
+  ;; https://stackoverflow.com/questions/2680864/how-to-remove-nested-parentheses-in-lisp
+  (cond ((null l) nil)
+        ((atom l) (list l))
+        (t (loop for a in l appending (flatten a)))))
 
-(defun continue-entry (entry)
-  "Destructively continue the time entry"
-  (progn 
-    (setf (entry-end entry) nil)
-    (setf (entry-running entry) t)
-    entry))
-(export 'continue-entry)
+(defgeneric serialize (obj)
+  (:documentation "serialize an object")
+  (:method (obj)
+   (format t "don't think that object is an entry that could be serialized~%"))
+  (:method ((obj entry))
+   `(,(title obj)
+      ,@(mapcar
+          (lambda (slot)
+            (let ((slot-name (closer-mop:slot-definition-name slot)))
+              (cond 
+              ((eq slot-name 'tags) 
+               (list 'tags (let ((tgs (tags obj)))
+                 (mapcar (lambda (tg)
+                           (flatten (mapcar 
+                           (lambda (tsl)
+                             (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
+                               (list (intern (symbol-name tsl-symb) "KEYWORD") (slot-value tg tsl-symb))   
+                               )
 
-(defun stop-entry (entry)
-  "Destructively stop the time entry"
-  (progn 
-    (setf (entry-end entry) (get-universal-time))
-    (setf (entry-running entry) nil)
-    entry))
-(export 'stop-entry)
 
+                             )
+                           (closer-mop:class-slots (find-class 'tag))
+                           )) 
+                           
+                           )
+                         
+                         tgs)
+
+
+                 ))  ))
+              )
+            )
+          (closer-mop:class-slots (find-class 'entry))))))
+
+
+(serialize (entry "this"
+                  (end 12)
+                  (tags ("tag1" "tag2" (:title "tag3" :weight 2)))
+                  (children 
+                    (("child1" (sequential t))
+                     ("child2" 
+                      (children
+                        (("childchild1"))))
+                     ("child3" (end 192012))))))

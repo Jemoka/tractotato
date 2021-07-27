@@ -2,5 +2,5 @@
 ;; exports are spread around.  `uiop:define-package' does not have this problem.
 
 (uiop:define-package tractotato 
-                     (:use :common-lisp))
+                     (:use :cl))
 
