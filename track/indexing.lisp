@@ -18,18 +18,3 @@
             (,(car body) ,(cadr body) (,(symbol-append 'entry- var) ,n))))))) 
 (export 'entry-index)
 
-(defparameter time-entries (list (track "A good time entry"
-                                        (project "Eating")
-                                        (tags ("aftercare"
-                                               "transition"))) 
-
-                                 (track "Another time entry"
-                                        (project "Swimming")
-                                        (tags ("one"
-                                               "two"))))) 
-(macroexpand '(entry-index (search "good") title)) 
-
-(remove-if-not (entry-index (search "good") title) time-entries)
-
-
-
