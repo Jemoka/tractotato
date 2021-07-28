@@ -57,7 +57,13 @@
      :documentation "tags of the entry")))
 (defmacro make-entry (&body body)
   `(make-instance 'entry ,@body))
-(export '(make-entry))
+(export '(make-entry 
+           start
+           end
+           children
+           sequential
+           running
+           tags))
 
 
 (defgeneric weight (obj)
@@ -70,34 +76,45 @@
 
 (defmethod weight ((obj entry))
   (+ (apply #'* (mapcar 
-               (lambda (n) (slot-value n 'weight)) 
-               (tags obj)))
+                  (lambda (n) (slot-value n 'weight)) 
+                  (tags obj)))
      (apply #'+ (mapcar 
-               (lambda (n) (weight n)) 
-               (children obj)))))
+                  (lambda (n) (weight n)) 
+                  (children obj)))))
 
 (defmethod (setf weight) (new-value (obj tag))
   (setf (slot-value obj 'weight) new-value))
 
 (export 'weight)
 
+(defun flatten (l)
+  "Flatten!"
+  ;; https://stackoverflow.com/questions/2680864/how-to-remove-nested-parentheses-in-lisp
+  (cond ((null l) nil)
+        ((atom l) (list l))
+        (t (loop for a in l appending (flatten a)))))
+
 (defmacro transform-tags (&body body)
   "Transform tag entries"
   `(list ,@(mapcar (lambda (n)
                      (if (atom n) 
                          `(make-tag :title ,n) 
-                         `(make-tag ,@n))) body)))
+                         `(make-tag :title ,(car n) ,@(flatten (mapcar 
+                                                                 (lambda (e)
+                                                                   (list (intern (symbol-name (car e)) "KEYWORD") (cadr e)))
+                                                                 (cdr n)))))) body)))
 
 (export 'transform-tags)
 
+(export 'parse)
 (defmacro parse (title &body body)
   "Parse entry"
   (let ((entries 
           (mapcan (lambda (n) 
                     (cond
-                      ((eq (car n) 'tractotato:tags) 
-                       `(:tags ,(macroexpand (cons 'tractotato:transform-tags (cadr n)))))
-                      ((eq (car n) 'tractotato:children) `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'tractotato:parse e))) (cadr n)))))
+                      ((equal (symbol-name (car n)) "TAGS") 
+                       `(:tags ,(macroexpand (cons 'transform-tags (cadr n)))))
+                      ((equal (symbol-name (car n)) "CHILDREN") `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'parse e))) (cadr n)))))
                       (t `(,(intern (symbol-name (car n)) "KEYWORD") ,(cadr n))))
                     ) body)))
     `(make-entry 
@@ -106,17 +123,11 @@
 
 (defmacro entry (&body body)
   "Overload parse as 'entry'"
-  `(tractotato:parse ,@body))
+  `(parse ,@body))
 
 (export '(parse 
            entry))
 
-(defun flatten (l)
-  "Flatten!"
-  ;; https://stackoverflow.com/questions/2680864/how-to-remove-nested-parentheses-in-lisp
-  (cond ((null l) nil)
-        ((atom l) (list l))
-        (t (loop for a in l appending (flatten a)))))
 
 (defgeneric serialize (obj)
   (:documentation "serialize an object")
@@ -131,11 +142,14 @@
                 ((eq slot-name 'tags) 
                  (list 'tags (let ((tgs (tags obj)))
                                (mapcar (lambda (tg)
-                                         (flatten (mapcar 
-                                                    (lambda (tsl)
-                                                      (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
-                                                        (list (intern (symbol-name tsl-symb) "KEYWORD") (slot-value tg tsl-symb))))
-                                                    (closer-mop:class-slots (find-class 'tag))))) 
+                                         (cons 
+                                           (slot-value tg 'title) 
+                                           (remove-if #'null (mapcar 
+                                                               (lambda (tsl)
+                                                                 (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
+                                                                   (if (not (eq tsl-symb 'title)) 
+                                                                       (list (intern (symbol-name tsl-symb)) (slot-value tg tsl-symb)))))
+                                                               (closer-mop:class-slots (find-class 'tag)))))) 
                                        tgs))))
                 ((eq slot-name 'children)
                  (list 'children (mapcar (lambda (ent) (serialize ent)) (children obj))))
@@ -143,5 +157,5 @@
                 )))
           (closer-mop:class-slots (find-class 'entry))))))
 
-(export '(serialize tags children))
+(export '(serialize))
 
