@@ -148,7 +148,7 @@
                                                                (lambda (tsl)
                                                                  (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
                                                                    (if (not (eq tsl-symb 'title)) 
-                                                                       (list (intern (symbol-name tsl-symb)) (slot-value tg tsl-symb)))))
+                                                                       (list tsl-symb (slot-value tg tsl-symb)))))
                                                                (closer-mop:class-slots (find-class 'tag)))))) 
                                        tgs))))
                 ((eq slot-name 'children)

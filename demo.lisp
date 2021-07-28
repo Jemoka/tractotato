@@ -6,15 +6,16 @@
                      (:use :cl :tractotato))
 (in-package :tractotato-demo)
 
-;(weight )
-(tags (eval (cons 'parse (serialize (parse "this"
-                                      (end 12)
-                                      (tags ("tag1" "tag2" ("tag3" (weight 2))))
-                                      (children 
-                                        (("child1" (sequential t))
-                                         ("child2" 
-                                          (children
-                                            (("childchild1"))))
-                                         ("child3" (end 192012))))))))) 
+(in-package :cl-user)
 
+;(weight )
+(tractotato:title (caddr (tractotato:tags (eval (cons 'tractotato:entry (tractotato:serialize  (tractotato:entry "this"
+                                                                 (end 12)
+                                                                 (tags ("tag1" "tag2" ("tag3" (weight 2))))
+                                                                 (children 
+                                                                   (("child1" (sequential t))
+                                                                    ("child2" 
+                                                                     (children
+                                                                       (("childchild1"))))
+                                                                    ("child3" (end 192012)))))))))))     
 
