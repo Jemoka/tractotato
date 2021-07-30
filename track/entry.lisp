@@ -87,25 +87,6 @@
 
 (export 'weight)
 
-(defun flatten (l)
-  "Flatten!"
-  ;; https://stackoverflow.com/questions/2680864/how-to-remove-nested-parentheses-in-lisp
-  (cond ((null l) nil)
-        ((atom l) (list l))
-        (t (loop for a in l appending (flatten a)))))
-
-(defmacro transform-tags (&body body)
-  "Transform tag entries"
-  `(list ,@(mapcar (lambda (n)
-                     (if (atom n) 
-                         `(make-tag :title ,n) 
-                         `(make-tag :title ,(car n) ,@(flatten (mapcar 
-                                                                 (lambda (e)
-                                                                   (list (intern (symbol-name (car e)) "KEYWORD") (cadr e)))
-                                                                 (cdr n)))))) body)))
-
-(export 'transform-tags)
-
 (export 'parse)
 (defmacro parse (title &body body)
   "Parse entry"
@@ -113,8 +94,23 @@
           (mapcan (lambda (n) 
                     (cond
                       ((equal (symbol-name (car n)) "TAGS") 
-                       `(:tags ,(macroexpand (cons 'transform-tags (cadr n)))))
-                      ((equal (symbol-name (car n)) "CHILDREN") `(:children (list ,@(mapcar (lambda (e) (macroexpand (cons 'parse e))) (cadr n)))))
+                       `(:tags 
+                          (list 
+                            ,@(mapcar (lambda (n)
+                                        (if (atom n) 
+                                            `(make-tag :title ,n) 
+                                            `(make-tag :title ,(car n) 
+                                                       ,@(mapcan 
+                                                           (lambda (e)
+                                                             (list 
+                                                               (intern (symbol-name (car e)) "KEYWORD") (cadr e)))
+                                                           (cdr n))))) 
+                                      (cadr n)))))
+                      ((equal (symbol-name (car n)) "CHILDREN") 
+                       `(:children (list ,@(mapcar 
+                                             (lambda (e) (if (atom e)
+                                                             `(make-entry :title ,e)
+                                                             (macroexpand (cons 'parse e)))) (cadr n)))))
                       (t `(,(intern (symbol-name (car n)) "KEYWORD") ,(cadr n))))
                     ) body)))
     `(make-entry 
@@ -131,31 +127,30 @@
 
 (defgeneric serialize (obj)
   (:documentation "serialize an object")
-  (:method (obj)
-   (format t "don't think that object is an entry that could be serialized~%"))
   (:method ((obj entry))
    `(,(title obj)
-      ,@(mapcar
-          (lambda (slot)
-            (let ((slot-name (closer-mop:slot-definition-name slot)))
-              (cond 
-                ((eq slot-name 'tags) 
-                 (list 'tags (let ((tgs (tags obj)))
-                               (mapcar (lambda (tg)
-                                         (cons 
-                                           (slot-value tg 'title) 
-                                           (remove-if #'null (mapcar 
-                                                               (lambda (tsl)
-                                                                 (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
-                                                                   (if (not (eq tsl-symb 'title)) 
-                                                                       (list tsl-symb (slot-value tg tsl-symb)))))
-                                                               (closer-mop:class-slots (find-class 'tag)))))) 
-                                       tgs))))
-                ((eq slot-name 'children)
-                 (list 'children (mapcar (lambda (ent) (serialize ent)) (children obj))))
-                (t (list slot-name (slot-value obj slot-name)))
-                )))
-          (closer-mop:class-slots (find-class 'entry))))))
+      ,@(remove-if #'null (mapcar
+                            (lambda (slot)
+                              (let ((slot-name (closer-mop:slot-definition-name slot)))
+                                (cond 
+                                  ((eq slot-name 'title) nil)
+                                  ((eq slot-name 'tags)
+                                   (list 'tags (let ((tgs (tags obj)))
+                                                 (mapcar (lambda (tg)
+                                                           (cons 
+                                                             (slot-value tg 'title) 
+                                                             (remove-if #'null (mapcar 
+                                                                                 (lambda (tsl)
+                                                                                   (let ((tsl-symb (closer-mop:slot-definition-name tsl)))
+                                                                                     (if (not (eq tsl-symb 'title)) 
+                                                                                         (list tsl-symb (slot-value tg tsl-symb)))))
+                                                                                 (closer-mop:class-slots (find-class 'tag)))))) 
+                                                         tgs))))
+                                  ((eq slot-name 'children)
+                                   (list 'children (mapcar (lambda (ent) (serialize ent)) (children obj))))
+                                  (t (list slot-name (slot-value obj slot-name)))
+                                  )))
+                            (closer-mop:class-slots (find-class 'entry))) ))))
 
 (export '(serialize))
 
