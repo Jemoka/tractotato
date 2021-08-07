@@ -1,47 +1,53 @@
 (in-package :tractotato)
 
+(defparameter *test* (entry "this"
+                            (end 12)
+                            (tags ("tag1" "tag2" ("tag3" (weight 2))))
+                            (children 
+                              ("child0"
+                               ("child1" (sequential t))
+                               ("child2" 
+                                (children
+                                  (("childchild1"))))
+                               ("child3" (end 192012))))))
 
-(defparameter *test* (entry "haa"
-                            (end 12091312)
-                            (children ("this" 
-                                       ("that"
-                                        (end 19230123)
-                                        (children ("this" 
-                                                   ("that"))))))))
+(defun match-prop (statement entry)
+  (let ((key (car statement))
+        (property (cadr statement))
+        (target (caddr statement)))
+    (remove-if #'null 
+               (cons 
+                 (if (funcall key (slot-value entry property) target)
+                     entry) ;entry
+                 (mapcan (lambda (new)
+                           (match-prop statement new))
+                         (children entry))))))
 
-(defun match (property target entry &key (key #'equal))
-  (remove-if #'null 
-             (cons 
-               (if (funcall key (slot-value entry property) target)
-                   entry)
-               (mapcan (lambda (new)
-                         (match property target new :key key))
-                       (children entry)))))
-
-(match 'title "FISHBLUBBER" *test*)
-
-
-
-;(defgeneric match (entry index &key (recurse t))
-;  )
+(defun match-tags (statement entry)
+  (let ((key (car statement))
+        (property (cadr statement))
+        (target (caddr statement)))
+    (append
+      (remove-if (lambda (n) 
+                   (not (funcall key 
+                                 (slot-value n property)
+                                 target)))
+                 (slot-value entry 'tags))
+      (mapcan (lambda (new)
+                (match-tags statement new))
+              (children entry)))))
 
 
 
-;;; TODO janky AF but eh
-;;; https://stackoverflow.com/questions/15710108/merging-symbols-in-common-lisp
-;(defun symbol-append (&rest symbols) 
-  ;(intern (apply #'concatenate 'string 
-                 ;(mapcar #'symbol-name symbols))))
-
-;(defmacro entry-index (body var &key (collect-rule 'or))
-  ;(let ((n (gensym)) (k (gensym)))
-    ;(cond
-      ;((eq var 'project) 
-       ;`(lambda (,n) (funcall ,body (project-title (entry-project ,n)))))
-      ;((eq var 'tags)
-       ;`(lambda (,n) (eval (macroexpand (cons (quote ,collect-rule) (mapcar (lambda (,k) 
-                                                                              ;(funcall ,body (tag-title ,k) (tag-weight ,k))) (entry-tags ,n)))))))
-      ;(t `(lambda (,n) 
-            ;(,(car body) ,(cadr body) (,(symbol-append 'entry- var) ,n)))))))
+;(defun tags-match)
+(match-tags 
+  '(string= title "hi") 
+  (entry "FUSH"
+         (tags ("hi"))
+         (children 
+           ("FISH" "BISH" "RISHFISH" 
+            ("NISH" 
+             (tags ("hibeba" "nish" ("hi" (weight 12))))
+             (children ("FISH")))))))
 
 

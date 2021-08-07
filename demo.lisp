@@ -6,16 +6,21 @@
                      (:use :cl :tractotato))
 (in-package :tractotato-demo)
 
-(serialize 
-  (entry "this"
-         (end 12)
-         (tags ("tag1" "tag2" ("tag3" (weight 2))))
-         (children 
-           ("child0"
-            ("child1" (sequential t))
-            ("child2" 
-             (children
-               (("childchild1"))))
-            ("child3" (end 192012))))))
+
+(serialize (entry "eat a chicken"
+                  (end 10901980)
+                  (tags ("haneu" "tahoeu" ("taga" (weight 12))))))  
+
+(entry "this"
+       (end 12)
+       (tags ("tag1" "tag2" ("tag3" (weight 2))))
+       (children 
+         ("child0"
+          ("child1" (sequential t))
+          ("child2" 
+           (children
+             (("childchild1"))))
+          ("child3" (end 192012)))))
+
 
 
