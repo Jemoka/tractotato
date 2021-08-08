@@ -63,30 +63,3 @@
                (eql with 'statement))
           `(match-prop #',key #',property ,target ,entry :direction ,direction))))))
 
-(index *hewo* 
-       :by (< 1 weight))
-
-
-
-;(match-tags #'> 'weight 12 *hewo* :direction :rtl)
-
-;(index *hewo* (< 12 weight) :for tags)
-;(macroexpand '(index *hewo* :with (eql title "ha")))
-;(macroexpand '(index *hewo* (< 12 weight) :for tags))
-
-;(start *hewo*)
-
-(defparameter *hewo* 
-  (entry "fush"
-         (tags ("hi"))
-         (children 
-           ("fish" "bish" "rishfish" 
-            ("nish" 
-             (tags ("hibeba" "nish" ("hi" (weight 12))))
-             (children ("fish")))))))
-
-;;;(index *hewo*
-   ;;;:for tag
-   ;;;:by tag 
-   ;;;:with (string= title "hi"))
-
