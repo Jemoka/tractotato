@@ -26,9 +26,8 @@
     (remove-if (lambda (n) 
                  (not (apply key 
                           (if (equal direction :ltr)
-                              (list (slot-value n property) target)
-                              (list target (slot-value n property))) 
-                          entry)))
+                              `(,(slot-value n property) ,target)
+                              `(,target ,(slot-value n property))))))
                (slot-value entry 'tags))
     (mapcan (lambda (new)
               (match-tags key property 
@@ -51,32 +50,35 @@
     (let ((direction (if (eql (cadr with) property) :ltr :rtl))) 
       `(cond 
          ((and (eql ',for 'entry) 
-               (eql ',by 'tag)) 
+               (eql ',by 'tags)) 
           (let ((,target-tags
                   (match-tags
                     ,key ,property ,target
                     ,entry)))
             (match-prop #'intersection 'tags ,target-tags ,entry)))
-         ((and (eql ',for 'tag)
+         ((and (eql ',for 'tags)
                (eql ',by 'statement))
           (match-tags #',key ',property ,target ,entry :direction ,direction))
          ((and (eql ',for 'entry)
                (eql ',by 'statement))
           (match-prop #',key ',property ,target ,entry :direction ,direction))))))
 
+(match-tags #'< 'weight 12 *hewo* :direction :rtl)
+
+;(index *hewo* (< 12 weight) :for tags)
 ;(macroexpand '(index *hewo* :with (eql title "ha")))
-(index *hewo* (< 12 start))
-(index *hewo* (> start 12))
+;(macroexpand '(index *hewo* (< 12 weight) :for tags))
+
 ;(start *hewo*)
 
 ;(defparameter *hewo* 
-  ;(entry "FUSH"
+  ;(entry "fush"
          ;(tags ("hi"))
          ;(children 
-           ;("FISH" "BISH" "RISHFISH" 
-            ;("NISH" 
+           ;("fish" "bish" "rishfish" 
+            ;("nish" 
              ;(tags ("hibeba" "nish" ("hi" (weight 12))))
-             ;(children ("FISH")))))))
+             ;(children ("fish")))))))
 
 ;;;(index *hewo*
    ;;;:for tag
