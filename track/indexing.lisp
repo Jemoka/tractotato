@@ -5,61 +5,63 @@
           (append 
             (closer-mop:class-direct-slots (find-class 'tag))
             (closer-mop:class-direct-slots (find-class 'entry))
-            (closer-mop:class-direct-slots (find-class 'tracto))))) 
+            (closer-mop:class-direct-slots (find-class 'tracto)))))
 
-(defun match-prop (key property target entry &key (direction :ltr))
+(export '*tracto-reserved-keywords*)
+
+(defun match-prop (key entry)
   (remove-if #'null 
              (cons 
-               (if (apply key 
-                          (if (equal direction :ltr)
-                              (list (funcall property entry) target)
-                              (list target (funcall property entry))))
+               (if (funcall key entry)
                    entry)
                (mapcan (lambda (new)
-                         (match-prop key property 
-                                     target new 
-                                     :direction direction))
+                         (match-prop key new))
                        (children entry)))))
 
-(defun match-tags (key property target entry &key (direction :ltr))
+(defun match-tags (key entry)
   (append
     (remove-if (lambda (n) 
-                 (not (apply key 
-                          (if (equal direction :ltr)
-                              `(,(funcall property n) ,target)
-                              `(,target ,(funcall property n))))))
+                 (not (funcall key n)))
                (slot-value entry 'tags))
     (mapcan (lambda (new)
-              (match-tags key property 
-                          target new 
-                          :direction direction))
+              (match-tags key new))
             (children entry))))
 
-(defmacro index (entry &key by (for 'entry) (with 'statement))
-  (let ((target-tags (gensym))
-        (key (car by))
-        (target
-          (car 
-            (remove-if (lambda (n) 
-                         (member n *tracto-reserved-keywords*)) 
-                       (cdr by))))
-        (property
-          (car 
-            (remove-if (lambda (n) 
-                         (not (member n (cons (car by) *tracto-reserved-keywords*)))) (cdr by)))))
-    (let ((direction (if (eql (cadr by) property) :ltr :rtl))) 
-      (cond 
-         ((and (eql for 'entry) 
-               (eql with 'tags)) 
-          `(let ((,target-tags
-                  (match-tags
-                    #',key #',property ,target
-                    ,entry :direction ,direction)))
-            (match-prop #'intersection #'tags ,target-tags ,entry)))
-         ((and (eql for 'tags)
-               (eql with 'statement))
-          `(match-tags #',key #',property ,target ,entry :direction ,direction))
-         ((and (eql for 'entry)
-               (eql with 'statement))
-          `(match-prop #',key #',property ,target ,entry :direction ,direction))))))
+(defun process-key (key item)
+  (mapcar (lambda (n)
+            (cond 
+              ;; TODO this is bad but eh
+              ((and (symbolp n) 
+                    (member (symbol-name n) 
+                            (mapcar #'symbol-name 
+                            *tracto-reserved-keywords*)
+                            :test #'string=)) 
+               (list (intern (symbol-name n) :tractotato) 
+                     item))
+              ((listp n) (process-key n item))
+              (t n))) key))
+
+(defmacro index (entry by &key (for 'entry) (with 'statement))
+  (let* ((n (gensym))
+         (target-tags (gensym))
+         (key `(lambda (,n)
+                 ,(process-key by n))))
+    (cond 
+      ((and (eql for 'entry) 
+            (eql with 'tags)) 
+       `(let ((,target-tags
+                (match-tags
+                  ,key ,entry)))
+          (match-prop (lambda (,n) 
+                        (intersection 
+                          (tags ,n) ,target-tags)) 
+                      ,entry)))
+      ((and (eql for 'tags)
+            (eql with 'statement))
+       `(match-tags ,key ,entry))
+      ((and (eql for 'entry)
+            (eql with 'statement))
+       `(match-prop ,key ,entry)))))
+
+(export 'index)
 
