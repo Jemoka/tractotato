@@ -5,10 +5,9 @@
 (uiop:define-package tractotato-demo
                      (:use :cl :tractotato))
 (in-package :tractotato-demo)
-(in-package :cl-user)
 
 (defparameter *testdb* 
-  (tractotato:entry 
+  (entry 
     "this"
     (end 12)
     (tags ("tag1" "tag2" ("tag3" (weight 2))))
@@ -20,4 +19,5 @@
           (("childchild1"))))
        ("child3" (end 192012))))))
 
-(tractotato:index *testdb* (string= title "child0"))
+(index *testdb* (search "ta" title) :for entry :with tags)
+
